@@ -1,19 +1,21 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+import { neon } from '@neondatabase/serverless';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
   
+  // Liga à Neon usando a variável de ambiente
+  const sql = neon(process.env.DATABASE_URL);
   const { phone, click_id } = req.body;
 
   try {
-    // Salva ou atualiza o lead pelo telefone
-    const { data, error } = await supabase
-      .from('leads')
-      .upsert({ phone, click_id }, { onConflict: 'phone' });
+    // Insere o novo lead ou atualiza o click_id se o telefone já existir (Upsert)
+    await sql`
+      INSERT INTO leads (phone, click_id)
+      VALUES (${phone}, ${click_id})
+      ON CONFLICT (phone) 
+      DO UPDATE SET click_id = EXCLUDED.click_id;
+    `;
 
-    if (error) throw error;
     res.status(200).json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
