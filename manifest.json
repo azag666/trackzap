@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "WhatsApp Sales Booster",
+  "version": "1.0",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["https://web.whatsapp.com/*", "http://teu-servidor.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://web.whatsapp.com/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
