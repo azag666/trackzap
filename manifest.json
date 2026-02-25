@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "WhatsApp Sales Booster",
+  "name": "WhatsApp Sales Pro",
   "version": "1.0",
   "permissions": ["storage", "activeTab"],
-  "host_permissions": ["https://web.whatsapp.com/*", "http://teu-servidor.com/*"],
+  "host_permissions": ["https://web.whatsapp.com/*", "https://*.vercel.app/*"],
   "content_scripts": [
     {
       "matches": ["https://web.whatsapp.com/*"],
