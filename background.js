@@ -1,4 +1,4 @@
-const VERCEL_URL = "https://SUA_URL_DO_VERCEL.vercel.app";
+const VERCEL_URL = "https://trackzap.vercel.app/";
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'SALVAR_LEAD') {
