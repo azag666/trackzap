@@ -37,38 +37,51 @@ style.innerHTML = `
   /* Injeções no Contato (Cabeçalho do WhatsApp) */
   .wsp-inline-btn { background: #00a884; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-left: 10px; font-size: 13px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
   .wsp-inline-btn:hover { background: #008f6f; }
-  .wsp-badge { background: #e7fce3; color: #008f6f; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-left: 8px; border: 1px solid #00a884; display: flex; align-items: center; gap: 4px; }
+  .wsp-badge { background: #e7fce3; color: #008f6f; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-left: 8px; border: 1px solid #00a884; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
   
   .wsp-hidden { display: none !important; }
 `;
 document.head.appendChild(style);
 
 // ==========================================
-// 2. FUNÇÕES DE SUPORTE
+// 2. FUNÇÕES DE SUPORTE (EXTRATOR RESILIENTE)
 // ==========================================
 
-// Tenta achar o telefone de várias formas (se for contato salvo, pede o número)
-function getActivePhone() {
+// Extrai o número silenciosamente para as etiquetas
+function getPhoneSilently() {
   const header = document.querySelector('header');
   if (!header) return null;
 
-  let phone = null;
-  // Tenta extrair do título ou alt da imagem
-  const textElements = header.querySelectorAll('div[dir="auto"], span[title], img[alt]');
-  for (let el of textElements) {
-    const text = el.getAttribute('title') || el.getAttribute('alt') || el.innerText;
-    if (text) {
-      const numbers = text.replace(/\D/g, '');
-      if (numbers.length >= 10 && numbers.length <= 15) {
-        phone = numbers;
-        break;
-      }
+  // 1. Procura primeiro no atributo title (onde o wpp geralmente esconde)
+  const elementsWithTitle = header.querySelectorAll('[title]');
+  for (let el of elementsWithTitle) {
+    const title = el.getAttribute('title');
+    // Verifica se parece um telefone (começa com + ou tem vários números formatados)
+    if (title && (title.includes('+') || /^[\d\s\-\(\)]+$/.test(title))) {
+        const num = title.replace(/\D/g, '');
+        // EUA tem 10 ou 11 dígitos, BR tem 12 ou 13
+        if (num.length >= 10 && num.length <= 15) return num;
     }
   }
 
-  // Fallback: Contato salvo sem número visível
+  // 2. Se falhar, procura via Regex direto no texto visível do cabeçalho
+  const headerText = header.innerText || '';
+  const phoneMatch = headerText.match(/\+?\d[\d\s\-\(\)]{9,20}/);
+  if (phoneMatch) {
+      const num = phoneMatch[0].replace(/\D/g, '');
+      if (num.length >= 10 && num.length <= 15) return num;
+  }
+
+  return null;
+}
+
+// Essa função só é chamada quando você clica em "Vender", garantindo que tem um fallback manual
+function getActivePhone() {
+  let phone = getPhoneSilently();
+  
+  // Fallback caso o Wpp tenha apagado totalmente o número da tela
   if (!phone) {
-    phone = prompt("O contato parece estar salvo com nome. Qual o número dele com DDD (Ex: 551199999999) para registrar a venda?");
+    phone = prompt("O WhatsApp ocultou o número. Digite o número do contato com código do país (Ex: 15551234567 para EUA ou 551199999999 para BR):");
     if (phone) phone = phone.replace(/\D/g, '');
   }
   return phone;
@@ -95,7 +108,7 @@ async function enviarAudio(url) {
 }
 
 // ==========================================
-// 3. INTERFACE DA EXTENSÃO (HTML INJETADO)
+// 3. INTERFACE DA EXTENSÃO
 // ==========================================
 const uiContainer = document.createElement('div');
 uiContainer.innerHTML = `
@@ -152,13 +165,10 @@ document.body.appendChild(uiContainer);
 // ==========================================
 // 4. LÓGICA DE EVENTOS (CLICKS)
 // ==========================================
-
-// Abrir/Fechar Painel
 document.getElementById('wsp-toggle-btn').addEventListener('click', () => {
   document.getElementById('wsp-panel').classList.toggle('wsp-open');
 });
 
-// Navegação Configurações
 document.getElementById('wsp-btn-config').addEventListener('click', () => {
   document.getElementById('wsp-view-main').classList.add('wsp-hidden');
   document.getElementById('wsp-view-config').classList.remove('wsp-hidden');
@@ -174,7 +184,6 @@ document.getElementById('wsp-btn-voltar').addEventListener('click', () => {
   document.getElementById('wsp-view-main').classList.remove('wsp-hidden');
 });
 
-// Salvar Configurações
 document.getElementById('wsp-btn-save-cfg').addEventListener('click', () => {
   chrome.storage.local.set({ 
     pixel_id: document.getElementById('wsp-cfg-pixel').value, 
@@ -186,7 +195,6 @@ document.getElementById('wsp-btn-save-cfg').addEventListener('click', () => {
   });
 });
 
-// Disparar Áudios
 document.querySelectorAll('.wsp-btn-audio').forEach(btn => {
   btn.addEventListener('click', (e) => {
     const key = e.currentTarget.getAttribute('data-audio-key');
@@ -194,11 +202,10 @@ document.querySelectorAll('.wsp-btn-audio').forEach(btn => {
   });
 });
 
-// Converter Manual pelo Painel
 document.getElementById('wsp-btn-convert').addEventListener('click', processarVenda);
 
 function processarVenda() {
-  const phone = getActivePhone();
+  const phone = getActivePhone(); 
   if (!phone) return;
 
   const valueStr = document.getElementById('wsp-val-input').value;
@@ -212,23 +219,21 @@ function processarVenda() {
 
     document.getElementById('wsp-btn-convert').innerText = "⏳ Processando...";
     
-    // Envia para o Backend/Meta
     chrome.runtime.sendMessage({ 
       type: 'CONVERSAO_META', phone, value, currency, pixel_id: res.pixel_id, access_token: res.access_token
     }, (response) => {
       document.getElementById('wsp-btn-convert').innerText = "✅ Enviar Venda e Etiquetar";
       
       if(response && response.status === "success") {
-        // Atualiza a etiqueta local (Múltiplas Conversões)
         let sales = res.sales || {};
-        if (!sales[phone]) sales[phone] = { count: 0, total: 0 };
+        if (!sales[phone]) sales[phone] = { count: 0, total: 0, currency: currency };
         sales[phone].count += 1;
         sales[phone].total += value;
         
         chrome.storage.local.set({ sales: sales }, () => {
           document.getElementById('wsp-val-input').value = '';
           alert('Venda registrada no Meta e Etiqueta atualizada!');
-          injectHeaderButtons(); // Força atualização visual
+          injectHeaderButtons();
         });
       } else {
         alert('Erro ao enviar conversão. Verifique os logs.');
@@ -238,31 +243,28 @@ function processarVenda() {
 }
 
 // ==========================================
-// 5. OBSERVER: INJETAR NO CABEÇALHO DO WHATSAPP
+// 5. OBSERVER E INJEÇÕES EM BACKGROUND
 // ==========================================
 function injectHeaderButtons() {
   const header = document.querySelector('header');
   if (!header) return;
 
-  // Evita duplicar
   let actionContainer = document.getElementById('wsp-header-actions');
   if (!actionContainer) {
     actionContainer = document.createElement('div');
     actionContainer.id = 'wsp-header-actions';
     actionContainer.style.display = 'flex';
     actionContainer.style.alignItems = 'center';
-    // Insere logo após o nome do contato
-    const titleContainer = header.querySelector('div[dir="auto"]').parentNode;
+    const titleContainer = header.querySelector('div[dir="auto"]')?.parentNode;
     if(titleContainer) titleContainer.appendChild(actionContainer);
   }
 
-  // Tenta extrair o número "frio" para checar etiquetas
-  let phoneStr = header.innerText.replace(/\D/g, '');
+  // Tenta capturar o número sem abrir o prompt
+  let phoneStr = getPhoneSilently();
   
   chrome.storage.local.get(['sales'], (res) => {
-    actionContainer.innerHTML = ''; // Limpa para re-renderizar
+    actionContainer.innerHTML = ''; 
     
-    // Cria botão de Venda Expressa no cabeçalho
     const btnVender = document.createElement('button');
     btnVender.className = 'wsp-inline-btn';
     btnVender.innerText = '💰 Vender';
@@ -272,21 +274,21 @@ function injectHeaderButtons() {
     };
     actionContainer.appendChild(btnVender);
 
-    // Se o contato já comprou, mostra a Etiqueta de Múltiplas conversões
-    if (res.sales) {
-      // Como o telefone pode não ser extraído perfeitamente se salvo, varremos o storage
-      // procurando se alguma chave (telefone) bate parcialmente com a tela atual.
-      let savedPhoneData = null;
-      for (const [key, data] of Object.entries(res.sales)) {
-         if (phoneStr.includes(key) || key.includes(phoneStr.substring(0, 10))) {
-            savedPhoneData = data; break;
+    if (res.sales && phoneStr) {
+      let savedPhoneData = res.sales[phoneStr];
+      // Tenta cruzar variações do número se não bater exato
+      if (!savedPhoneData) {
+         for (const [key, data] of Object.entries(res.sales)) {
+            if (phoneStr.includes(key) || key.includes(phoneStr.substring(0, 10))) {
+               savedPhoneData = data; break;
+            }
          }
       }
 
       if (savedPhoneData) {
         const badge = document.createElement('span');
         badge.className = 'wsp-badge';
-        badge.innerHTML = `✅ Pago: R$ ${savedPhoneData.total.toFixed(2)} <span>(${savedPhoneData.count}x)</span>`;
+        badge.innerHTML = `✅ Pago: ${savedPhoneData.currency === 'USD' ? '$' : 'R$'} ${savedPhoneData.total.toFixed(2)} <span>(${savedPhoneData.count}x)</span>`;
         actionContainer.appendChild(badge);
       }
     }
@@ -297,9 +299,9 @@ function injectHeaderButtons() {
 setInterval(() => {
   injectHeaderButtons();
   
-  // Lógica antiga de salvar lead invisível se chegar link com REF
-  const phone = document.querySelector('header')?.innerText.replace(/\D/g, '');
+  const phone = getPhoneSilently();
   if(!phone) return;
+
   const messages = document.querySelectorAll('.message-in');
   messages.forEach(msg => {
     const match = msg.innerText.match(/ref=([a-zA-Z0-9_-]+)/); 
