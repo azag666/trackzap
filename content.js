@@ -18,23 +18,23 @@ style.innerHTML = `
   .wsp-audio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .wsp-btn-audio { background: #e9edef; border: 1px solid #d1d7db; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; display: flex; flex-direction: column; align-items: center; gap: 5px; }
 
-  /* Tags no Cabeçalho do WhatsApp */
-  #wsp-tags-container { display: flex; align-items: center; gap: 8px; margin-left: 15px; }
-  .wsp-tag { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  /* Tags no Cabeçalho do WhatsApp - FORÇA BRUTA */
+  #wsp-tags-container { display: flex; align-items: center; gap: 8px; margin-left: 15px; z-index: 9999; }
+  .wsp-tag { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); white-space: nowrap; }
   .wsp-tag-pagante { background: #e7fce3; color: #008f6f; border: 1px solid #00a884; }
   .wsp-tag-frio { background: #ffebee; color: #c62828; border: 1px solid #ef5350; }
   .wsp-tag-quente { background: #fff3e0; color: #ef6c00; border: 1px solid #ffb74d; }
   
-  .wsp-add-tag-btn { background: #f0f2f5; border: 1px solid #d1d7db; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; cursor: pointer; color: #54656f; }
+  .wsp-add-tag-btn { background: #f0f2f5; border: 1px solid #d1d7db; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; cursor: pointer; color: #54656f; white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
   .wsp-add-tag-btn:hover { background: #e9edef; }
 
   /* Dropdown de Escolha de Tag */
-  #wsp-tag-dropdown { position: absolute; background: white; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 8px; display: none; z-index: 10001; flex-direction: column; gap: 5px; top: 60px; }
+  #wsp-tag-dropdown { position: fixed; background: white; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 8px; display: none; z-index: 20000; flex-direction: column; gap: 5px; }
   .wsp-dropdown-item { padding: 8px 12px; cursor: pointer; border-radius: 6px; font-size: 13px; font-weight: 500; }
   .wsp-dropdown-item:hover { background: #f0f2f5; }
 
   /* Modal de Conversão (Pagante) */
-  #wsp-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 20000; display: none; align-items: center; justify-content: center; }
+  #wsp-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 30000; display: none; align-items: center; justify-content: center; }
   .wsp-modal { background: white; width: 300px; padding: 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); font-family: sans-serif; }
   .wsp-modal h3 { margin: 0 0 15px 0; font-size: 16px; color: #111b21; }
   .wsp-modal-row { display: flex; gap: 10px; margin-bottom: 15px; }
@@ -134,7 +134,6 @@ document.body.appendChild(uiContainer);
 // ==========================================
 // 4. LÓGICA DE INTERAÇÃO
 // ==========================================
-// Painel Config
 document.getElementById('wsp-toggle-btn').addEventListener('click', () => {
   document.getElementById('wsp-panel').classList.add('wsp-open');
   chrome.storage.local.get(['pixel_id', 'access_token'], (res) => {
@@ -172,30 +171,37 @@ document.querySelectorAll('.wsp-dropdown-item').forEach(item => {
   item.addEventListener('click', (e) => {
     dropdown.style.display = 'none';
     const tagType = e.currentTarget.getAttribute('data-tag');
-    const phone = getPhoneSilently();
+    let phone = getPhoneSilently();
     
-    if (!phone) return alert('Não foi possível identificar o número deste contato.');
+    // Fallback: se não achar o telefone escondido, pede para digitar na hora da conversão
+    if (!phone && tagType === 'pagante') {
+        phone = prompt("O WhatsApp ocultou este número. Digite o número com DDI e DDD (Ex: 551199999999) para enviar ao Meta:");
+        if(phone) phone = phone.replace(/\D/g, '');
+    }
+    
+    if (!phone) return alert('Número não identificado.');
 
     if (tagType === 'pagante') {
-      modal.style.display = 'flex'; // Abre o modal de venda
+      // Guarda temporariamente o telefone no modal para usar no envio
+      modal.setAttribute('data-current-phone', phone);
+      modal.style.display = 'flex'; 
     } else {
-      salvarTag(phone, tagType); // Salva tags simples (frio/quente)
+      salvarTag(phone, tagType); 
     }
   });
 });
 
 document.getElementById('wsp-modal-cancel').addEventListener('click', () => modal.style.display = 'none');
 
-// Disparo da Conversão
 document.getElementById('wsp-modal-confirm').addEventListener('click', () => {
-  const phone = getPhoneSilently();
+  const phone = modal.getAttribute('data-current-phone');
   const value = parseFloat(document.getElementById('wsp-modal-val').value);
   const currency = document.getElementById('wsp-modal-cur').value;
 
   if (!value || isNaN(value)) return alert('Digite um valor válido.');
 
   chrome.storage.local.get(['pixel_id', 'access_token'], (res) => {
-    if (!res.pixel_id || !res.access_token) return alert('Configure o Pixel e Token primeiro!');
+    if (!res.pixel_id || !res.access_token) return alert('Configure o Pixel e Token na engrenagem primeiro!');
 
     const btn = document.getElementById('wsp-modal-confirm');
     btn.innerText = "⏳ Enviando...";
@@ -210,7 +216,7 @@ document.getElementById('wsp-modal-confirm').addEventListener('click', () => {
         document.getElementById('wsp-modal-val').value = '';
         salvarTag(phone, 'pagante', value, currency);
       } else {
-        alert('Erro ao comunicar com o servidor. Verifique o console da extensão.');
+        alert('Erro ao comunicar com o Meta. O Chrome pode estar bloqueando ou as credenciais estão erradas.');
         console.error("Erro da extensão:", response?.err);
       }
     });
@@ -235,38 +241,54 @@ function salvarTag(phone, tipo, value = 0, currency = 'BRL') {
 }
 
 // ==========================================
-// 5. INJETAR TAGS NO CABEÇALHO (OBSERVER)
+// 5. INJETAR TAGS: ESTRATÉGIA "FORÇA BRUTA"
 // ==========================================
 function injectTags() {
   const header = document.querySelector('header');
-  if (!header) return;
+  if (!header) return; // Só tenta injetar se existir uma conversa aberta
 
   let tagsContainer = document.getElementById('wsp-tags-container');
+  
   if (!tagsContainer) {
     tagsContainer = document.createElement('div');
     tagsContainer.id = 'wsp-tags-container';
-    const titleContainer = header.querySelector('div[dir="auto"]')?.parentNode;
-    if(titleContainer) titleContainer.appendChild(tagsContainer);
+    
+    // Tenta colocar no "flexbox" principal do cabeçalho
+    const headerInfoBlock = header.querySelector(':nth-child(2)'); // Onde fica a foto e o nome
+    
+    if (headerInfoBlock) {
+        headerInfoBlock.style.display = 'flex';
+        headerInfoBlock.style.alignItems = 'center';
+        headerInfoBlock.appendChild(tagsContainer);
+    } else {
+        // Fallback: Se o WhatsApp mudar a estrutura de novo, cola absoluto no meio do header
+        tagsContainer.style.position = 'absolute';
+        tagsContainer.style.left = '40%';
+        tagsContainer.style.top = '15px';
+        header.appendChild(tagsContainer);
+    }
   }
 
   const phone = getPhoneSilently();
   
   chrome.storage.local.get(['tags_crm'], (res) => {
-    tagsContainer.innerHTML = ''; 
+    tagsContainer.innerHTML = ''; // Limpa para atualizar
 
-    // Botão Adicionar Tag
+    // Cria o botão principal de Adicionar Tag
     const addBtn = document.createElement('button');
     addBtn.className = 'wsp-add-tag-btn';
-    addBtn.innerText = '➕ Tag';
+    addBtn.innerText = '➕ Etiquetar';
     addBtn.onclick = (e) => {
       const rect = e.currentTarget.getBoundingClientRect();
+      const dropdown = document.getElementById('wsp-tag-dropdown');
+      // Calcula a posição ignorando a barra de rolagem
       dropdown.style.top = (rect.bottom + 5) + 'px';
       dropdown.style.left = rect.left + 'px';
       dropdown.style.display = 'flex';
     };
     tagsContainer.appendChild(addBtn);
 
-    // Mostra a Tag se existir
+    // Renderiza as tags salvas
     if (res.tags_crm && phone && res.tags_crm[phone]) {
       const dados = res.tags_crm[phone];
       const tagEl = document.createElement('span');
@@ -287,9 +309,11 @@ function injectTags() {
   });
 }
 
+// Roda a verificação de injeção mais rápido (a cada 1 segundo)
 setInterval(() => {
   injectTags();
-  // Rastreador invisível de Click ID
+  
+  // Rastreador invisível de Click ID da Pressel
   const phone = getPhoneSilently();
   if(!phone) return;
   const messages = document.querySelectorAll('.message-in');
