@@ -1,200 +1,156 @@
 // ==========================================
-// 1. ESTILOS CSS PROFISSIONAIS E INJEÇÃO
+// 1. ESTILOS CSS DO SISTEMA DE TAGS E MODAL
 // ==========================================
 const style = document.createElement('style');
 style.innerHTML = `
-  /* Painel Flutuante e Recolhível */
+  /* Painel Flutuante (Apenas para Áudios e Configurações agora) */
   #wsp-toggle-btn { position: fixed; bottom: 30px; right: 30px; width: 55px; height: 55px; background: #00a884; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10000; transition: transform 0.2s; border: none; }
   #wsp-toggle-btn:hover { transform: scale(1.1); }
   
-  #wsp-panel { position: fixed; bottom: 100px; right: 30px; width: 320px; background: #ffffff; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.2); font-family: -apple-system, sans-serif; overflow: hidden; border: 1px solid #e0e0e0; z-index: 10000; transition: opacity 0.3s, transform 0.3s; transform-origin: bottom right; display: none; }
-  #wsp-panel.wsp-open { display: block; animation: popUp 0.3s ease-out forwards; }
-  @keyframes popUp { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+  #wsp-panel { position: fixed; bottom: 100px; right: 30px; width: 320px; background: #ffffff; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.2); font-family: -apple-system, sans-serif; overflow: hidden; border: 1px solid #e0e0e0; z-index: 10000; display: none; }
+  #wsp-panel.wsp-open { display: block; }
 
-  /* Cabeçalho do Painel */
   .wsp-header { background: #111b21; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 15px; }
-  .wsp-header button { background: none; border: none; color: #00a884; cursor: pointer; font-size: 18px; transition: color 0.2s; }
-  .wsp-header button:hover { color: #fff; }
+  .wsp-header button { background: none; border: none; color: #00a884; cursor: pointer; font-size: 18px; }
+  .wsp-body { padding: 15px; }
+  .wsp-input { width: 100%; padding: 10px; border: 1px solid #d1d7db; border-radius: 8px; box-sizing: border-box; font-size: 14px; margin-bottom: 10px;}
+  .wsp-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: white; margin-bottom: 10px; background: #00a884; }
+  .wsp-audio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .wsp-btn-audio { background: #e9edef; border: 1px solid #d1d7db; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; display: flex; flex-direction: column; align-items: center; gap: 5px; }
 
-  /* Corpo e Inputs */
-  .wsp-body { padding: 15px; max-height: 400px; overflow-y: auto; }
-  .wsp-group { margin-bottom: 12px; }
-  .wsp-label { display: block; font-size: 12px; color: #667781; margin-bottom: 5px; font-weight: 500; }
-  .wsp-input { width: 100%; padding: 10px; border: 1px solid #d1d7db; border-radius: 8px; box-sizing: border-box; font-size: 14px; background: #f0f2f5; color: #111b21; outline: none; }
-  .wsp-input:focus { border-color: #00a884; background: #fff; }
+  /* Tags no Cabeçalho do WhatsApp */
+  #wsp-tags-container { display: flex; align-items: center; gap: 8px; margin-left: 15px; }
+  .wsp-tag { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .wsp-tag-pagante { background: #e7fce3; color: #008f6f; border: 1px solid #00a884; }
+  .wsp-tag-frio { background: #ffebee; color: #c62828; border: 1px solid #ef5350; }
+  .wsp-tag-quente { background: #fff3e0; color: #ef6c00; border: 1px solid #ffb74d; }
   
-  /* Botões e Grid de Áudios */
-  .wsp-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: background 0.2s; color: white; margin-bottom: 10px; }
-  .wsp-btn-success { background: #00a884; }
-  .wsp-btn-success:hover { background: #008f6f; }
-  .wsp-btn-secondary { background: #8696a0; }
-  .wsp-btn-secondary:hover { background: #667781; }
-  
-  .wsp-audio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
-  .wsp-btn-audio { background: #e9edef; color: #111b21; border: 1px solid #d1d7db; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; display: flex; flex-direction: column; align-items: center; gap: 5px; transition: background 0.2s;}
-  .wsp-btn-audio:hover { background: #d1d7db; }
+  .wsp-add-tag-btn { background: #f0f2f5; border: 1px solid #d1d7db; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; cursor: pointer; color: #54656f; }
+  .wsp-add-tag-btn:hover { background: #e9edef; }
 
-  /* Injeções no Contato (Cabeçalho do WhatsApp) */
-  .wsp-inline-btn { background: #00a884; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-left: 10px; font-size: 13px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-  .wsp-inline-btn:hover { background: #008f6f; }
-  .wsp-badge { background: #e7fce3; color: #008f6f; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-left: 8px; border: 1px solid #00a884; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+  /* Dropdown de Escolha de Tag */
+  #wsp-tag-dropdown { position: absolute; background: white; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 8px; display: none; z-index: 10001; flex-direction: column; gap: 5px; top: 60px; }
+  .wsp-dropdown-item { padding: 8px 12px; cursor: pointer; border-radius: 6px; font-size: 13px; font-weight: 500; }
+  .wsp-dropdown-item:hover { background: #f0f2f5; }
+
+  /* Modal de Conversão (Pagante) */
+  #wsp-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 20000; display: none; align-items: center; justify-content: center; }
+  .wsp-modal { background: white; width: 300px; padding: 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); font-family: sans-serif; }
+  .wsp-modal h3 { margin: 0 0 15px 0; font-size: 16px; color: #111b21; }
+  .wsp-modal-row { display: flex; gap: 10px; margin-bottom: 15px; }
+  .wsp-btn-cancel { background: #8696a0; }
   
   .wsp-hidden { display: none !important; }
 `;
 document.head.appendChild(style);
 
 // ==========================================
-// 2. FUNÇÕES DE SUPORTE (EXTRATOR RESILIENTE)
+// 2. EXTRAÇÃO RESILIENTE DE TELEFONE
 // ==========================================
-
-// Extrai o número silenciosamente para as etiquetas
 function getPhoneSilently() {
   const header = document.querySelector('header');
   if (!header) return null;
-
-  // 1. Procura primeiro no atributo title (onde o wpp geralmente esconde)
   const elementsWithTitle = header.querySelectorAll('[title]');
   for (let el of elementsWithTitle) {
     const title = el.getAttribute('title');
-    // Verifica se parece um telefone (começa com + ou tem vários números formatados)
     if (title && (title.includes('+') || /^[\d\s\-\(\)]+$/.test(title))) {
         const num = title.replace(/\D/g, '');
-        // EUA tem 10 ou 11 dígitos, BR tem 12 ou 13
         if (num.length >= 10 && num.length <= 15) return num;
     }
   }
-
-  // 2. Se falhar, procura via Regex direto no texto visível do cabeçalho
   const headerText = header.innerText || '';
   const phoneMatch = headerText.match(/\+?\d[\d\s\-\(\)]{9,20}/);
   if (phoneMatch) {
       const num = phoneMatch[0].replace(/\D/g, '');
       if (num.length >= 10 && num.length <= 15) return num;
   }
-
   return null;
 }
 
-// Essa função só é chamada quando você clica em "Vender", garantindo que tem um fallback manual
-function getActivePhone() {
-  let phone = getPhoneSilently();
-  
-  // Fallback caso o Wpp tenha apagado totalmente o número da tela
-  if (!phone) {
-    phone = prompt("O WhatsApp ocultou o número. Digite o número do contato com código do país (Ex: 15551234567 para EUA ou 551199999999 para BR):");
-    if (phone) phone = phone.replace(/\D/g, '');
-  }
-  return phone;
-}
-
-// Simula envio de áudio
 async function enviarAudio(url) {
-  if (!url) return alert("Configure o link do áudio na engrenagem!");
+  if (!url) return alert("Configure o link do áudio!");
   try {
     const response = await fetch(url);
     const blob = await response.blob();
     const file = new File([blob], "audio.ogg", { type: "audio/ogg; codecs=opus" });
-    const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
+    const dt = new DataTransfer();
+    dt.items.add(file);
     const input = document.querySelector('div[contenteditable="true"]');
-    if(input) {
-       input.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dataTransfer, bubbles: true }));
-    } else {
-       alert("Abra uma conversa primeiro para enviar o áudio.");
-    }
-  } catch (e) {
-    alert("Erro ao puxar o áudio. Verifique se o link está correto e acessível.");
-  }
+    if(input) input.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true }));
+  } catch (e) { alert("Erro ao enviar áudio."); }
 }
 
 // ==========================================
-// 3. INTERFACE DA EXTENSÃO
+// 3. UI: PAINEL DE ÁUDIOS, DROPDOWN E MODAL
 // ==========================================
 const uiContainer = document.createElement('div');
 uiContainer.innerHTML = `
-  <button id="wsp-toggle-btn" title="Vendas Pro">💰</button>
-  
+  <button id="wsp-toggle-btn">⚙️</button>
   <div id="wsp-panel">
     <div class="wsp-header">
-      <span>🚀 CRM Vendas</span>
-      <button id="wsp-btn-config" title="Configurações">⚙️</button>
+      <span>🚀 CRM Config</span>
+      <button id="wsp-btn-config-close">✖</button>
     </div>
-    
     <div id="wsp-view-main" class="wsp-body">
-      <div class="wsp-label" style="text-align: center; margin-bottom: 10px;">Áudios de Conversão</div>
       <div class="wsp-audio-grid">
-        <button class="wsp-btn-audio" data-audio-key="audio1"><span>🎙️</span> Apresentação</button>
-        <button class="wsp-btn-audio" data-audio-key="audio2"><span>🎙️</span> Prova Social</button>
-        <button class="wsp-btn-audio" data-audio-key="audio3"><span>🎙️</span> Quebra Objeção</button>
-        <button class="wsp-btn-audio" data-audio-key="audio4"><span>🎙️</span> Fechamento</button>
+        <button class="wsp-btn-audio" data-audio-key="audio1">🎙️ Apresentação</button>
+        <button class="wsp-btn-audio" data-audio-key="audio2">🎙️ Prova Social</button>
+        <button class="wsp-btn-audio" data-audio-key="audio3">🎙️ Objeção</button>
+        <button class="wsp-btn-audio" data-audio-key="audio4">🎙️ Fechamento</button>
       </div>
-      
-      <div style="border-top: 1px solid #e0e0e0; margin: 15px 0; padding-top: 15px;">
-        <span style="font-size: 13px; font-weight: bold; color:#111b21; display:block; margin-bottom:10px;">Registrar Conversão (Meta CAPI)</span>
-        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-          <input type="number" id="wsp-val-input" class="wsp-input" placeholder="Valor (Ex: 97.00)" step="0.01">
-          <select id="wsp-currency-input" class="wsp-input" style="width: 40%;">
-            <option value="BRL">BRL</option>
-            <option value="USD">USD</option>
-          </select>
-        </div>
-        <button id="wsp-btn-convert" class="wsp-btn wsp-btn-success">✅ Enviar Venda e Etiquetar</button>
-      </div>
+      <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+      <label style="font-size: 12px; font-weight: bold;">Pixel ID</label>
+      <input type="text" id="wsp-cfg-pixel" class="wsp-input" placeholder="Ex: 1234567890">
+      <label style="font-size: 12px; font-weight: bold;">Access Token (Meta)</label>
+      <input type="password" id="wsp-cfg-token" class="wsp-input" placeholder="EAAB...">
+      <button id="wsp-btn-save-cfg" class="wsp-btn">💾 Salvar Configurações</button>
     </div>
+  </div>
 
-    <div id="wsp-view-config" class="wsp-body wsp-hidden">
-      <div class="wsp-group">
-        <label class="wsp-label">Pixel ID (Meta)</label>
-        <input type="text" id="wsp-cfg-pixel" class="wsp-input" placeholder="Ex: 1234567890">
+  <div id="wsp-tag-dropdown">
+    <div class="wsp-dropdown-item" data-tag="pagante">🟢 Pagante (Marcar Venda)</div>
+    <div class="wsp-dropdown-item" data-tag="quente">🔥 Quente</div>
+    <div class="wsp-dropdown-item" data-tag="frio">❄️ Frio</div>
+  </div>
+
+  <div id="wsp-modal-overlay">
+    <div class="wsp-modal">
+      <h3>Registrar Pagamento</h3>
+      <p style="font-size: 12px; color: #666; margin-bottom: 10px;">O valor será enviado para o Meta CAPI.</p>
+      <div class="wsp-modal-row">
+        <input type="number" id="wsp-modal-val" class="wsp-input" placeholder="Valor (Ex: 97.00)" step="0.01">
+        <select id="wsp-modal-cur" class="wsp-input" style="width: 40%;">
+          <option value="BRL">BRL</option>
+          <option value="USD">USD</option>
+        </select>
       </div>
-      <div class="wsp-group">
-        <label class="wsp-label">Access Token (CAPI)</label>
-        <input type="password" id="wsp-cfg-token" class="wsp-input" placeholder="EAAB...">
-      </div>
-      <div class="wsp-group">
-        <label class="wsp-label">Link Áudio 1 (Apresentação)</label>
-        <input type="text" id="wsp-cfg-audio1" class="wsp-input" placeholder="https://...arquivo.ogg">
-      </div>
-      <button id="wsp-btn-save-cfg" class="wsp-btn wsp-btn-success" style="margin-top: 10px;">Salvar Configurações</button>
-      <button id="wsp-btn-voltar" class="wsp-btn wsp-btn-secondary">Voltar</button>
+      <button id="wsp-modal-confirm" class="wsp-btn">✅ Confirmar Venda</button>
+      <button id="wsp-modal-cancel" class="wsp-btn wsp-btn-cancel">Cancelar</button>
     </div>
   </div>
 `;
 document.body.appendChild(uiContainer);
 
 // ==========================================
-// 4. LÓGICA DE EVENTOS (CLICKS)
+// 4. LÓGICA DE INTERAÇÃO
 // ==========================================
+// Painel Config
 document.getElementById('wsp-toggle-btn').addEventListener('click', () => {
-  document.getElementById('wsp-panel').classList.toggle('wsp-open');
-});
-
-document.getElementById('wsp-btn-config').addEventListener('click', () => {
-  document.getElementById('wsp-view-main').classList.add('wsp-hidden');
-  document.getElementById('wsp-view-config').classList.remove('wsp-hidden');
-  chrome.storage.local.get(['pixel_id', 'access_token', 'audio1'], (res) => {
+  document.getElementById('wsp-panel').classList.add('wsp-open');
+  chrome.storage.local.get(['pixel_id', 'access_token'], (res) => {
     if(res.pixel_id) document.getElementById('wsp-cfg-pixel').value = res.pixel_id;
     if(res.access_token) document.getElementById('wsp-cfg-token').value = res.access_token;
-    if(res.audio1) document.getElementById('wsp-cfg-audio1').value = res.audio1;
   });
 });
-
-document.getElementById('wsp-btn-voltar').addEventListener('click', () => {
-  document.getElementById('wsp-view-config').classList.add('wsp-hidden');
-  document.getElementById('wsp-view-main').classList.remove('wsp-hidden');
+document.getElementById('wsp-btn-config-close').addEventListener('click', () => {
+  document.getElementById('wsp-panel').classList.remove('wsp-open');
 });
-
 document.getElementById('wsp-btn-save-cfg').addEventListener('click', () => {
   chrome.storage.local.set({ 
     pixel_id: document.getElementById('wsp-cfg-pixel').value, 
-    access_token: document.getElementById('wsp-cfg-token').value, 
-    audio1: document.getElementById('wsp-cfg-audio1').value 
-  }, () => {
-    alert('Configurações salvas!');
-    document.getElementById('wsp-btn-voltar').click();
-  });
+    access_token: document.getElementById('wsp-cfg-token').value 
+  }, () => alert('Salvo com sucesso!'));
 });
-
 document.querySelectorAll('.wsp-btn-audio').forEach(btn => {
   btn.addEventListener('click', (e) => {
     const key = e.currentTarget.getAttribute('data-audio-key');
@@ -202,106 +158,140 @@ document.querySelectorAll('.wsp-btn-audio').forEach(btn => {
   });
 });
 
-document.getElementById('wsp-btn-convert').addEventListener('click', processarVenda);
+// Dropdown e Modal
+const dropdown = document.getElementById('wsp-tag-dropdown');
+const modal = document.getElementById('wsp-modal-overlay');
 
-function processarVenda() {
-  const phone = getActivePhone(); 
-  if (!phone) return;
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#wsp-tag-dropdown') && !e.target.closest('.wsp-add-tag-btn')) {
+    dropdown.style.display = 'none';
+  }
+});
 
-  const valueStr = document.getElementById('wsp-val-input').value;
-  const value = parseFloat(valueStr);
-  const currency = document.getElementById('wsp-currency-input').value;
-
-  if (!valueStr || isNaN(value)) return alert('Digite um valor numérico válido.');
-
-  chrome.storage.local.get(['pixel_id', 'access_token', 'sales'], (res) => {
-    if (!res.pixel_id || !res.access_token) return alert('Configure o Pixel e Token na engrenagem!');
-
-    document.getElementById('wsp-btn-convert').innerText = "⏳ Processando...";
+document.querySelectorAll('.wsp-dropdown-item').forEach(item => {
+  item.addEventListener('click', (e) => {
+    dropdown.style.display = 'none';
+    const tagType = e.currentTarget.getAttribute('data-tag');
+    const phone = getPhoneSilently();
     
+    if (!phone) return alert('Não foi possível identificar o número deste contato.');
+
+    if (tagType === 'pagante') {
+      modal.style.display = 'flex'; // Abre o modal de venda
+    } else {
+      salvarTag(phone, tagType); // Salva tags simples (frio/quente)
+    }
+  });
+});
+
+document.getElementById('wsp-modal-cancel').addEventListener('click', () => modal.style.display = 'none');
+
+// Disparo da Conversão
+document.getElementById('wsp-modal-confirm').addEventListener('click', () => {
+  const phone = getPhoneSilently();
+  const value = parseFloat(document.getElementById('wsp-modal-val').value);
+  const currency = document.getElementById('wsp-modal-cur').value;
+
+  if (!value || isNaN(value)) return alert('Digite um valor válido.');
+
+  chrome.storage.local.get(['pixel_id', 'access_token'], (res) => {
+    if (!res.pixel_id || !res.access_token) return alert('Configure o Pixel e Token primeiro!');
+
+    const btn = document.getElementById('wsp-modal-confirm');
+    btn.innerText = "⏳ Enviando...";
+
     chrome.runtime.sendMessage({ 
       type: 'CONVERSAO_META', phone, value, currency, pixel_id: res.pixel_id, access_token: res.access_token
     }, (response) => {
-      document.getElementById('wsp-btn-convert').innerText = "✅ Enviar Venda e Etiquetar";
+      btn.innerText = "✅ Confirmar Venda";
       
       if(response && response.status === "success") {
-        let sales = res.sales || {};
-        if (!sales[phone]) sales[phone] = { count: 0, total: 0, currency: currency };
-        sales[phone].count += 1;
-        sales[phone].total += value;
-        
-        chrome.storage.local.set({ sales: sales }, () => {
-          document.getElementById('wsp-val-input').value = '';
-          alert('Venda registrada no Meta e Etiqueta atualizada!');
-          injectHeaderButtons();
-        });
+        modal.style.display = 'none';
+        document.getElementById('wsp-modal-val').value = '';
+        salvarTag(phone, 'pagante', value, currency);
       } else {
-        alert('Erro ao enviar conversão. Verifique os logs.');
+        alert('Erro ao comunicar com o servidor. Verifique o console da extensão.');
+        console.error("Erro da extensão:", response?.err);
       }
     });
+  });
+});
+
+function salvarTag(phone, tipo, value = 0, currency = 'BRL') {
+  chrome.storage.local.get(['tags_crm'], (res) => {
+    let crm = res.tags_crm || {};
+    if (!crm[phone]) crm[phone] = { tipo: tipo, total: 0, count: 0, currency: currency };
+    
+    if (tipo === 'pagante') {
+      crm[phone].tipo = 'pagante';
+      crm[phone].total += value;
+      crm[phone].count += 1;
+    } else {
+      crm[phone].tipo = tipo;
+    }
+
+    chrome.storage.local.set({ tags_crm: crm }, () => injectTags());
   });
 }
 
 // ==========================================
-// 5. OBSERVER E INJEÇÕES EM BACKGROUND
+// 5. INJETAR TAGS NO CABEÇALHO (OBSERVER)
 // ==========================================
-function injectHeaderButtons() {
+function injectTags() {
   const header = document.querySelector('header');
   if (!header) return;
 
-  let actionContainer = document.getElementById('wsp-header-actions');
-  if (!actionContainer) {
-    actionContainer = document.createElement('div');
-    actionContainer.id = 'wsp-header-actions';
-    actionContainer.style.display = 'flex';
-    actionContainer.style.alignItems = 'center';
+  let tagsContainer = document.getElementById('wsp-tags-container');
+  if (!tagsContainer) {
+    tagsContainer = document.createElement('div');
+    tagsContainer.id = 'wsp-tags-container';
     const titleContainer = header.querySelector('div[dir="auto"]')?.parentNode;
-    if(titleContainer) titleContainer.appendChild(actionContainer);
+    if(titleContainer) titleContainer.appendChild(tagsContainer);
   }
 
-  // Tenta capturar o número sem abrir o prompt
-  let phoneStr = getPhoneSilently();
+  const phone = getPhoneSilently();
   
-  chrome.storage.local.get(['sales'], (res) => {
-    actionContainer.innerHTML = ''; 
-    
-    const btnVender = document.createElement('button');
-    btnVender.className = 'wsp-inline-btn';
-    btnVender.innerText = '💰 Vender';
-    btnVender.onclick = () => {
-      document.getElementById('wsp-panel').classList.add('wsp-open');
-      document.getElementById('wsp-val-input').focus();
+  chrome.storage.local.get(['tags_crm'], (res) => {
+    tagsContainer.innerHTML = ''; 
+
+    // Botão Adicionar Tag
+    const addBtn = document.createElement('button');
+    addBtn.className = 'wsp-add-tag-btn';
+    addBtn.innerText = '➕ Tag';
+    addBtn.onclick = (e) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      dropdown.style.top = (rect.bottom + 5) + 'px';
+      dropdown.style.left = rect.left + 'px';
+      dropdown.style.display = 'flex';
     };
-    actionContainer.appendChild(btnVender);
+    tagsContainer.appendChild(addBtn);
 
-    if (res.sales && phoneStr) {
-      let savedPhoneData = res.sales[phoneStr];
-      // Tenta cruzar variações do número se não bater exato
-      if (!savedPhoneData) {
-         for (const [key, data] of Object.entries(res.sales)) {
-            if (phoneStr.includes(key) || key.includes(phoneStr.substring(0, 10))) {
-               savedPhoneData = data; break;
-            }
-         }
+    // Mostra a Tag se existir
+    if (res.tags_crm && phone && res.tags_crm[phone]) {
+      const dados = res.tags_crm[phone];
+      const tagEl = document.createElement('span');
+      
+      if (dados.tipo === 'pagante') {
+        tagEl.className = 'wsp-tag wsp-tag-pagante';
+        const simbolo = dados.currency === 'USD' ? '$' : 'R$';
+        tagEl.innerHTML = `🟢 Pago: ${simbolo} ${dados.total.toFixed(2)}`;
+      } else if (dados.tipo === 'quente') {
+        tagEl.className = 'wsp-tag wsp-tag-quente';
+        tagEl.innerHTML = `🔥 Quente`;
+      } else if (dados.tipo === 'frio') {
+        tagEl.className = 'wsp-tag wsp-tag-frio';
+        tagEl.innerHTML = `❄️ Frio`;
       }
-
-      if (savedPhoneData) {
-        const badge = document.createElement('span');
-        badge.className = 'wsp-badge';
-        badge.innerHTML = `✅ Pago: ${savedPhoneData.currency === 'USD' ? '$' : 'R$'} ${savedPhoneData.total.toFixed(2)} <span>(${savedPhoneData.count}x)</span>`;
-        actionContainer.appendChild(badge);
-      }
+      tagsContainer.appendChild(tagEl);
     }
   });
 }
 
-// Roda a verificação de injeção a cada 1.5 segundos
 setInterval(() => {
-  injectHeaderButtons();
-  
+  injectTags();
+  // Rastreador invisível de Click ID
   const phone = getPhoneSilently();
   if(!phone) return;
-
   const messages = document.querySelectorAll('.message-in');
   messages.forEach(msg => {
     const match = msg.innerText.match(/ref=([a-zA-Z0-9_-]+)/); 
@@ -313,4 +303,4 @@ setInterval(() => {
       }
     }
   });
-}, 1500);
+}, 1000);
